@@ -31,7 +31,8 @@ export const base44 = {
  const base64Client = {
   integrations: {
     Core: {
-      InvokeLLM: async (params) => {
+  
+    InvokeLLM: async (params) => {
         try {
           
           let base64Data = params.file_urls[0];
@@ -54,7 +55,6 @@ export const base44 = {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-
           const data = await response.json();
           
           return {
