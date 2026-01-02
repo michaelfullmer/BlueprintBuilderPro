@@ -1,5 +1,4 @@
 [build]
-  base = "Blueprint-builder-v2"
   command = "npm run build"
   functions = "netlify/functions"
   publish = "dist"
