@@ -1,7 +1,17 @@
-const fetch = require('node-fetch');
+exports.handler = async (event) => {
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      },
+      body: ''
+    };
+  }
 
-exports.handler = async (event, context) => {
-  
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -57,7 +67,14 @@ exports.handler = async (event, context) => {
     console.error('Error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to analyze blueprint', details: error.message })
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      },
+      body: JSON.stringify({ 
+        error: 'Failed to analyze blueprint', 
+        details: error.message 
+      })
     };
   }
 };
