@@ -1,6 +1,22 @@
+// src/api/base44Client.js
+
+// In-memory store for projects (mock persistence)
 const projectStore = [];
 
+// Load Claude API key from environment
+const API_KEY = import.meta.env.VITE_CLAUDE_API_KEY || '';
+
+// Mock mode if no API key is provided
+const isMock = !API_KEY;
+
+console.log(isMock ? 'Running in MOCK mode (no API key found)' : 'Running in LIVE mode with Claude API key');
+
+// Main exported client object
 export const base44 = {
+  auth: {
+    me: async () => ({ id: '1', email: 'user@example.com', full_name: 'Beta User', avatar_url: null }),
+    logout: () => { console.log('Mock logout'); }
+  },
   entities: {
     Project: {
       list: async () => [...projectStore],
@@ -24,53 +40,85 @@ export const base44 = {
       }
     }
   },
-  auth: {
-    me: async () => ({ id: '1', email: 'user@example.com', full_name: 'Beta User', avatar_url: null }),
-    logout: () => { console.log('Mock logout'); }
-  },
- const base64Client = {
   integrations: {
     Core: {
-  
-    InvokeLLM: async (params) => {
+      InvokeLLM: async (params) => {
+        const { prompt, file_urls } = params;
+        if (isMock) {
+          console.log('Using mock LLM response');
+          return getMockResponse(prompt);
+        }
         try {
-          
-          let base64Data = params.file_urls[0];
-          if (base64Data.includes(',')) {
-            base64Data = base64Data.split(',')[1];
+          console.log('Calling Claude API for real analysis...');
+          let base64Image;
+          if (file_urls && file_urls.length > 0) {
+            const response = await fetch(file_urls[0]);
+            const blob = await response.blob();
+            base64Image = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = reader.result.split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(blob);
+            });
           }
+          // Load key from localStorage (user-entered) or env (your default)
+const getApiKey = () => {
+  return localStorage.getItem('claude_api_key') || import.meta.env.VITE_CLAUDE_API_KEY || '';
+};
 
-          
-          const response = await fetch('/.netlify/functions/analyze-blueprint', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+const API_KEY = getApiKey();
+
+const isMock = !API_KEY;
+
+console.log(isMock ? 'MOCK mode (no key)' : 'LIVE mode with Claude key');
+        
             },
             body: JSON.stringify({
-              image: base64Data,
-              prompt: params.prompt
+              model: 'claude-3-5-sonnet-20241022',
+              max_tokens: 4096,
+              messages: [{
+                role: 'user',
+                content: base64Image ? [
+                  {
+                    type: 'image',
+                    source: {
+                      type: 'base64',
+                      media_type: 'image/jpeg',
+                      data: base64Image,
+                    },
+                  },
+                  {
+                    type: 'text',
+                    text: prompt + '\n\nPlease respond with ONLY valid JSON, no other text.'
+                  }
+                ] : [
+                  {
+                    type: 'text',
+                    text: prompt + '\n\nPlease respond with ONLY valid JSON, no other text.'
+                  }
+                ]
+              }]
             })
           });
-
           if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Claude API error: ${response.status}`);
           }
           const data = await response.json();
-          
-          return {
-            content: [
-              {
-                type: "text",
-                text: data.content[0].text
-              }
-            ]
-          };
+          const content = data.content[0].text;
+          // Clean up response and parse JSON
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+          }
+          return JSON.parse(content);
         } catch (error) {
-          console.error('Error calling Netlify function:', error);
-          throw error;
+          console.error('Claude API Error:', error);
+          console.log('Falling back to mock data');
+          return getMockResponse(prompt);
         }
       },
-
       UploadFile: async ({ file }) => {
         const base64Data = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -78,113 +126,8 @@ export const base44 = {
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-
         return { file_url: base64Data };
       }
-    }
-  },
-
-  Project: {
-    list: async () => [...projectStore],
-    filter: async (params) => {
-      if (params?.id) return projectStore.filter(p => p.id === params.id);
-      return [...projectStore];
-    },
-    get: async (id) => projectStore.find(p => p.id === id) || null,
-    create: async (data) => {
-      const newProject = {
-        ...data,
-        id: Math.random().toString(36).substr(2, 9),
-        created_date: new Date().toISOString()
-      };
-      projectStore.push(newProject);
-      return newProject;
-    },
-    delete: async (id) => {
-      const index = projectStore.findIndex(p => p.id === id);
-      if (index !== -1) projectStore.splice(index, 1);
-    }
-  }
-};
-    // If no API key, use mock data
-    if (!apiKey || apiKey === 'your_key_here') {
-      console.log('No Claude API key found, using mock data');
-      return getMockResponse(prompt);
-    }
-
-    try {
-      // REAL CLAUDE API CALL
-      console.log('Calling Claude API for real analysis...');
-
-      // Convert blob URL to base64 if needed
-      let base64Image;
-      if (file_urls && file_urls.length > 0) {
-        const response = await fetch(file_urls[0]);
-        const blob = await response.blob();
-        base64Image = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64 = reader.result.split(',')[1];
-            resolve(base64);
-          };
-          reader.readAsDataURL(blob);
-        });
-      }
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-3-5-sonnet-20241022',
-          max_tokens: 4096,
-          messages: [{
-            role: 'user',
-            content: base64Image ? [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: base64Image,
-                },
-              },
-              {
-                type: 'text',
-                text: prompt + '\n\nPlease respond with ONLY valid JSON, no other text.'
-              }
-            ] : [
-              {
-                type: 'text',
-                text: prompt + '\n\nPlease respond with ONLY valid JSON, no other text.'
-              }
-            ]
-          }]
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Claude API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.content[0].text;
-
-      // Clean up response and parse JSON
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-
-      return JSON.parse(content);
-
-    } catch (error) {
-      console.error('Claude API Error:', error);
-      console.log('Falling back to mock data');
-      return getMockResponse(prompt);
     }
   }
 };
@@ -276,39 +219,39 @@ function getMockResponse(prompt) {
           total_estimate: 200000,
           total_duration_days: 87
         });
+      } else {
+        // Blueprint analysis - return mock extracted data
+        resolve({
+          total_sqft: 2400,
+          floors: 2,
+          foundation_type: "slab",
+          roof_type: "gable",
+          roof_pitch: "6/12",
+          roof_sqft: 1400,
+          exterior_walls_sqft: 2800,
+          rooms: [
+            { name: "Living Room", length: 20, width: 15, sqft: 300, flooring_type: "Hardwood" },
+            { name: "Kitchen", length: 15, width: 12, sqft: 180, flooring_type: "Tile" },
+            { name: "Master Bedroom", length: 16, width: 14, sqft: 224, flooring_type: "Carpet" },
+            { name: "Bedroom 2", length: 12, width: 11, sqft: 132, flooring_type: "Carpet" },
+            { name: "Bedroom 3", length: 12, width: 11, sqft: 132, flooring_type: "Carpet" },
+            { name: "Master Bath", length: 10, width: 8, sqft: 80, flooring_type: "Tile" },
+            { name: "Bath 2", length: 8, width: 6, sqft: 48, flooring_type: "Tile" },
+            { name: "Dining Room", length: 14, width: 12, sqft: 168, flooring_type: "Hardwood" },
+            { name: "Garage", length: 22, width: 22, sqft: 484, flooring_type: "Concrete" }
+          ],
+          structural_elements: [
+            { type: "Load-bearing wall", description: "Main support walls", quantity: 4 },
+            { type: "Beam", description: "Support beams", quantity: 8 }
+          ],
+          windows: 18,
+          doors: 8,
+          garage_bays: 2,
+          special_features: ["Covered front porch", "Attached 2-car garage", "Open floor plan"],
+          exterior_walls_linear_ft: 280,
+          interior_walls_linear_ft: 420
+        });
       }
-
-      // Blueprint analysis - return mock extracted data
-      resolve({
-        total_sqft: 2400,
-        floors: 2,
-        foundation_type: "slab",
-        roof_type: "gable",
-        roof_pitch: "6/12",
-        roof_sqft: 1400,
-        exterior_walls_sqft: 2800,
-        rooms: [
-          { name: "Living Room", length: 20, width: 15, sqft: 300, flooring_type: "Hardwood" },
-          { name: "Kitchen", length: 15, width: 12, sqft: 180, flooring_type: "Tile" },
-          { name: "Master Bedroom", length: 16, width: 14, sqft: 224, flooring_type: "Carpet" },
-          { name: "Bedroom 2", length: 12, width: 11, sqft: 132, flooring_type: "Carpet" },
-          { name: "Bedroom 3", length: 12, width: 11, sqft: 132, flooring_type: "Carpet" },
-          { name: "Master Bath", length: 10, width: 8, sqft: 80, flooring_type: "Tile" },
-          { name: "Bath 2", length: 8, width: 6, sqft: 48, flooring_type: "Tile" },
-          { name: "Dining Room", length: 14, width: 12, sqft: 168, flooring_type: "Hardwood" },
-          { name: "Garage", length: 22, width: 22, sqft: 484, flooring_type: "Concrete" }
-        ],
-        structural_elements: [
-          { type: "Load-bearing wall", description: "Main support walls", quantity: 4 },
-          { type: "Beam", description: "Support beams", quantity: 8 }
-        ],
-        windows: 18,
-        doors: 8,
-        garage_bays: 2,
-        special_features: ["Covered front porch", "Attached 2-car garage", "Open floor plan"],
-        exterior_walls_linear_ft: 280,
-        interior_walls_linear_ft: 420
-      });
     }, 2000);
   });
 }
