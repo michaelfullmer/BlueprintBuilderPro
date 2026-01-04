@@ -153,7 +153,9 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </div>
         </div>
-
+       <Link to="/settings" className="p-2 rounded-lg hover:bg-slate-800 transition-colors">
+        <Settings className="w-5 h-5 text-[#00E5E5] hover:text-[#00E5E5]/80" />
+       </Link>
         {/* Mobile menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 bg-white">
