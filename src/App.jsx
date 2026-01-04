@@ -23,6 +23,7 @@ function App() {
       <Router>
         <Layout>
           <Routes>
+            <Route path="/settings" element={<Settings />} />
             <Route path="/" element={<Home />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/new-project" element={<NewProject />} />
