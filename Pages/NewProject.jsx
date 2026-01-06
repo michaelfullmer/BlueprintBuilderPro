@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/lib/base44Client';
 import BlueprintGrid from '../components/ui/BlueprintGrid';
 import GlassCard from '../components/ui/GlassCard';
 import StepIndicator from '../components/wizard/StepIndicator';

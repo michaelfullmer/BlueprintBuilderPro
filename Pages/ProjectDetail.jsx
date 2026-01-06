@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { base44 } from '@/lib/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import BlueprintGrid from '../components/ui/BlueprintGrid';
 import GlassCard from '../components/ui/GlassCard';
