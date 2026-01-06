@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@media print {
+  header {
+    display: none !important;
+  }
+  button {
+    display: none !important;
+  }
+  main {
+    padding-top: 0 !important;
+  }
+  /* Ensure background colors are printed */
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
