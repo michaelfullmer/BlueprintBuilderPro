@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/lib/utils';
 import { base44 } from '@/lib/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import BlueprintGrid from '../components/ui/BlueprintGrid';
-import GlassCard from '../components/ui/GlassCard';
-import StatCard from '../components/dashboard/StatCard';
-import ProjectCard from '../components/dashboard/ProjectCard';
+import BlueprintGrid from '@/components/ui/BlueprintGrid';
+import GlassCard from '@/components/ui/GlassCard';
+import StatCard from '@/components/dashboard/StatCard';
+import ProjectCard from '@/components/dashboard/ProjectCard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 

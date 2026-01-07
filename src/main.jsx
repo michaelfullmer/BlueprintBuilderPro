@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Layout from '../Layout';
-import Home from '../Pages/Home';
-import Projects from '../Pages/Projects';
-import NewProject from '../Pages/NewProject';
-import ProjectDetail from '../Pages/ProjectDetail';
+
+import Layout from '@/Layout';
+import Home from '@/pages/Home';
+import Projects from '@/pages/Projects';
+import NewProject from '@/pages/NewProject';
+import ProjectDetail from '@/pages/ProjectDetail';
 
 const queryClient = new QueryClient();
 
@@ -37,9 +38,9 @@ function App() {
             }
           />
           <Route
-            path="/new"
+            path="/new-project"
             element={
-              <WithLayout name="NewProject">
+              <WithLayout name="New Project">
                 <NewProject />
               </WithLayout>
             }
@@ -47,7 +48,7 @@ function App() {
           <Route
             path="/projects/:id"
             element={
-              <WithLayout name="ProjectDetail">
+              <WithLayout name="Project Detail">
                 <ProjectDetail />
               </WithLayout>
             }

@@ -2,12 +2,21 @@ import express from 'express';
 import cors from 'cors';
 import { fetch } from 'undici';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(cors());
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, '../dist')));
+
 
 const toBase64FromUrl = async (url) => {
   const resp = await fetch(url);
@@ -145,6 +154,12 @@ app.post('/api/analyze', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message || 'Server error' });
   }
+});
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
 const port = process.env.PORT ? Number(process.env.PORT) : 8787;

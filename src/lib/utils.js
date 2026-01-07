@@ -14,3 +14,14 @@ export const fetchWithTimeout = async (url, options = {}, ms = 15000) => {
     clearTimeout(id);
   }
 };
+// src/lib/utils.js
+
+// ... your existing exports (fetchWithTimeout, cn, etc.)
+
+export const createPageUrl = (page, params = {}) => {
+  let url = page;
+  if (params.id) {
+    url = url.replace(':id', params.id);
+  }
+  return url;
+};
