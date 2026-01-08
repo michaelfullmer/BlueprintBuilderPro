@@ -38,7 +38,7 @@ function App() {
             }
           />
           <Route
-            path="/new-project"
+            path="/new"
             element={
               <WithLayout name="New Project">
                 <NewProject />
